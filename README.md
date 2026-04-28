@@ -4,6 +4,7 @@ A project-local pi extension that adds cache inspection commands:
 
 - `/cache graph` — shows cache hit % over time for assistant turns across the current session timeline
 - `/cache stats` — shows per-message token/cache breakdown for assistant messages across the whole session tree, plus cumulative totals
+- `/cache export` — writes the same stats data to `session-name.csv` at the project root
 
 ## Commands
 
@@ -28,6 +29,14 @@ Opens a TUI overlay table that shows:
 - per-message cache hit %
 - cumulative totals for the active branch and the whole tree
 
+### `/cache export`
+Writes a CSV to the project root:
+- filename: `session-name.csv`
+- uses the current pi session name when available
+- falls back to the session file basename if the session has no explicit name
+- contains summary rows plus the per-message rows shown in `/cache stats`
+- can be opened in Excel to build graphs from the exported columns
+
 ## Local usage
 
 Run pi with this extension from the current folder:
@@ -41,6 +50,7 @@ Then use:
 ```text
 /cache graph
 /cache stats
+/cache export
 ```
 
 ## Install as a local package
