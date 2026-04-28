@@ -1,0 +1,35 @@
+{
+  "name": "pi-cache-graph",
+  "version": "0.1.0",
+  "description": "Pi extension for visualizing context cache distribution and statistics",
+  "type": "module",
+  "private": true,
+  "pi": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
+  "scripts": {
+    "dev": "pi -e .",
+    "check": "tsc --noEmit"
+  },
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "cache",
+    "tui"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@mariozechner/pi-ai": "*",
+    "@mariozechner/pi-coding-agent": "*",
+    "@mariozechner/pi-tui": "*"
+  },
+  "devDependencies": {
+    "@mariozechner/pi-ai": "^0.70.6",
+    "@mariozechner/pi-coding-agent": "^0.70.6",
+    "@mariozechner/pi-tui": "^0.70.6",
+    "typescript": "^5.0.0"
+  },
+  "author": ""
+}
