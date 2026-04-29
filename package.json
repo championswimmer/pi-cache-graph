@@ -12,6 +12,7 @@
   "scripts": {
     "dev": "pi -e .",
     "check": "tsc --noEmit",
+    "fixtures:generate": "node scripts/generate-fixtures.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },
