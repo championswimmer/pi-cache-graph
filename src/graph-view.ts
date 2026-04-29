@@ -12,9 +12,9 @@ export function graphViewLabel(view: GraphView): string {
     case "per-turn":
       return "Per-turn (%)";
     case "cumulative-percent":
-      return "Cumulative (%)";
+      return "Cumulative (aggregate) %";
     case "cumulative-total":
-      return "Cumulative (total)";
+      return "Cumulative (aggregate) total";
   }
 }
 
@@ -113,9 +113,9 @@ function renderStackedSeriesChart(
         const inp = seriesInput[i]!;
         const read = seriesCacheRead[i]!;
         const write = seriesCacheWrite[i]!;
-        if (read >= threshold) return theme.fg("success", "▒");
+        if (read >= threshold) return theme.fg("accent", "▒");
         if (write >= threshold) return theme.fg("warning", "░");
-        if (inp >= threshold) return theme.fg("accent", "▇");
+        if (inp >= threshold) return theme.fg("muted", "▇");
         return theme.fg("dim", "·");
       })
       .join("");
@@ -184,7 +184,7 @@ function renderCumulativePercent(
   const startIdx = messages.length - recentCount;
   const recent = messages.slice(-recentCount);
   lines.push(theme.fg("accent", theme.bold(`Recent ${recentCount} turns`)));
-  lines.push(theme.fg("dim", "* = on current active branch  |  values are running totals"));
+  lines.push(theme.fg("dim", "* = on current active branch  |  values are aggregate (running) totals"));
   for (let i = 0; i < recent.length; i += 1) {
     const message = recent[i]!;
     const label = `#${String(message.sequence).padStart(2, " ")}${message.isOnActiveBranch ? "*" : " "}`;
@@ -193,8 +193,8 @@ function renderCumulativePercent(
     const cRead = cumSeries.cumCacheRead[startIdx + i]!;
     lines.push(
       `${theme.fg("muted", label)} ${formatPercent(hitPct).padStart(6, " ")}  ` +
-        `cumIn ${formatInt(cInput).padStart(7, " ")}  ` +
-        `cumHit ${formatInt(cRead).padStart(7, " ")}  ` +
+        `aggIn ${formatInt(cInput).padStart(7, " ")}  ` +
+        `aggHit ${formatInt(cRead).padStart(7, " ")}  ` +
         theme.fg("dim", `${message.provider}/${message.model}`),
     );
   }
@@ -226,11 +226,11 @@ function renderCumulativeTotal(
 
   // Legend
   lines.push(
-    theme.fg("accent", "▇") +
+    theme.fg("muted", "▇") +
       theme.fg("dim", " input (uncached)   ") +
       theme.fg("warning", "░") +
       theme.fg("dim", " cache write   ") +
-      theme.fg("success", "▒") +
+      theme.fg("accent", "▒") +
       theme.fg("dim", " cache read (hit)   ") +
       theme.fg("dim", `1 row = ${formatInt(unitTokens)} tokens`),
   );
@@ -240,15 +240,15 @@ function renderCumulativeTotal(
   const startIdx = messages.length - recentCount;
   const recent = messages.slice(-recentCount);
   lines.push(theme.fg("accent", theme.bold(`Recent ${recentCount} turns`)));
-  lines.push(theme.fg("dim", "* = on current active branch  |  values are running totals"));
+  lines.push(theme.fg("dim", "* = on current active branch  |  values are aggregate (running) totals"));
   for (let i = 0; i < recent.length; i += 1) {
     const message = recent[i]!;
     const label = `#${String(message.sequence).padStart(2, " ")}${message.isOnActiveBranch ? "*" : " "}`;
     lines.push(
       `${theme.fg("muted", label)} ` +
-        `cumIn ${formatInt(cumSeries.cumInput[startIdx + i]!).padStart(7, " ")}  ` +
-        `cumWrite ${formatInt(cumSeries.cumCacheWrite[startIdx + i]!).padStart(7, " ")}  ` +
-        `cumHit ${formatInt(cumSeries.cumCacheRead[startIdx + i]!).padStart(7, " ")}  ` +
+        `aggIn ${formatInt(cumSeries.cumInput[startIdx + i]!).padStart(7, " ")}  ` +
+        `aggWrite ${formatInt(cumSeries.cumCacheWrite[startIdx + i]!).padStart(7, " ")}  ` +
+        `aggHit ${formatInt(cumSeries.cumCacheRead[startIdx + i]!).padStart(7, " ")}  ` +
         theme.fg("dim", `${message.provider}/${message.model}`),
     );
   }
@@ -273,10 +273,10 @@ export function renderGraphBody(
       lines.push(theme.fg("dim", "Per-turn cache hit % = cacheRead / (input + cacheRead + cacheWrite)"));
       break;
     case "cumulative-percent":
-      lines.push(theme.fg("dim", "Running hit % = cumCacheRead / (cumInput + cumCacheRead + cumCacheWrite)"));
+      lines.push(theme.fg("dim", "Aggregate hit % = aggCacheRead / (aggInput + aggCacheRead + aggCacheWrite)"));
       break;
     case "cumulative-total":
-      lines.push(theme.fg("dim", "Running cumulative token volumes (input, cacheWrite, cacheRead)"));
+      lines.push(theme.fg("dim", "Aggregate (cumulative) token volumes: input  ░ cacheWrite  ▒ cacheRead"));
       break;
   }
 
