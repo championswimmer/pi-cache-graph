@@ -1,12 +1,29 @@
 import type { Theme } from "@mariozechner/pi-coding-agent";
 import type { AssistantUsageMetric, CacheSessionMetrics } from "./types.js";
 import { formatInt, formatPercent, formatTotalsLine } from "./format-utils.js";
+import { computeCumulativeSeries, type CumulativeSeries } from "./cumulative.js";
+
+export type GraphView = "per-turn" | "cumulative-percent" | "cumulative-total";
+
+export const GRAPH_VIEWS: GraphView[] = ["per-turn", "cumulative-percent", "cumulative-total"];
+
+export function graphViewLabel(view: GraphView): string {
+  switch (view) {
+    case "per-turn":
+      return "Per-turn (%)";
+    case "cumulative-percent":
+      return "Cumulative (%)";
+    case "cumulative-total":
+      return "Cumulative (total)";
+  }
+}
+
+// ─── Bucketing helpers ────────────────────────────────────────────────────────
 
 export function bucketMessages(messages: AssistantUsageMetric[], bucketCount: number): AssistantUsageMetric[][] {
   if (messages.length <= bucketCount) {
     return messages.map((message) => [message]);
   }
-
   const buckets: AssistantUsageMetric[][] = [];
   for (let i = 0; i < bucketCount; i += 1) {
     const start = Math.floor((i * messages.length) / bucketCount);
@@ -14,6 +31,22 @@ export function bucketMessages(messages: AssistantUsageMetric[], bucketCount: nu
     buckets.push(messages.slice(start, Math.max(start + 1, end)));
   }
   return buckets;
+}
+
+/**
+ * Buckets a flat numeric array using max — correct for monotonic cumulative series
+ * because max == last sample in each bucket.
+ */
+function bucketMax(values: number[], bucketCount: number): number[] {
+  if (values.length <= bucketCount) return [...values];
+  const result: number[] = [];
+  for (let i = 0; i < bucketCount; i += 1) {
+    const start = Math.floor((i * values.length) / bucketCount);
+    const end = Math.floor(((i + 1) * values.length) / bucketCount);
+    const slice = values.slice(start, Math.max(start + 1, end));
+    result.push(Math.max(...slice));
+  }
+  return result;
 }
 
 export function averageHitPercent(messages: AssistantUsageMetric[]): number {
@@ -32,53 +65,89 @@ export function maxHitPercent(messages: AssistantUsageMetric[]): number {
   return Math.max(...messages.map((message) => message.cacheHitPercent));
 }
 
-export function renderGraphBody(theme: Theme, metrics: CacheSessionMetrics, width: number): string[] {
-  const messages = metrics.allMessages;
+// ─── Shared chart primitives ──────────────────────────────────────────────────
+
+/**
+ * Renders a single-series 0–100% bar chart.
+ * Label column is 4 chars + "│" = 5 chars wide.
+ */
+function renderBarChart(theme: Theme, values: number[], chartHeight: number): string[] {
   const lines: string[] = [];
-
-  lines.push(theme.fg("accent", theme.bold("Cache hit trend (whole session timeline)")));
-  lines.push(theme.fg("dim", "Per-turn cache hit % = cacheRead / (input + cacheRead)"));
-  lines.push("");
-  lines.push(formatTotalsLine("Active branch", metrics.activeBranchTotals));
-  lines.push(formatTotalsLine("Whole tree", metrics.treeTotals));
-  lines.push("");
-
-  if (messages.length === 0) {
-    lines.push(theme.fg("warning", "No assistant messages with usage data are available yet in this session."));
-    return lines;
-  }
-
-  const latest = messages[messages.length - 1]!;
-  lines.push(
-    [
-      `Latest: ${formatPercent(latest.cacheHitPercent)}`,
-      `Min: ${formatPercent(minHitPercent(messages))}`,
-      `Max: ${formatPercent(maxHitPercent(messages))}`,
-      `Turns: ${formatInt(messages.length)}`,
-    ].join(" • "),
-  );
-  lines.push("");
-
-  const chartHeight = 10;
-  const chartWidth = Math.max(10, width - 8);
-  const buckets = bucketMessages(messages, chartWidth);
-  const values = buckets.map((bucket) => averageHitPercent(bucket));
-
   for (let row = chartHeight; row >= 1; row -= 1) {
     const threshold = (row / chartHeight) * 100;
     const label = `${String(Math.round(threshold)).padStart(3, " ")}│`;
     const body = values
-      .map((value) => (value >= threshold ? theme.fg("accent", "█") : theme.fg("dim", "·")))
+      .map((v) => (v >= threshold ? theme.fg("accent", "█") : theme.fg("dim", "·")))
       .join("");
     lines.push(theme.fg("muted", label) + body);
   }
-
   lines.push(theme.fg("muted", `  0│${theme.fg("dim", "─".repeat(values.length))}`));
-  lines.push(
-    theme.fg("dim", `   ${1}`) +
-      (values.length > 2 ? theme.fg("dim", `${" ".repeat(Math.max(1, values.length - String(messages.length).length - 1))}${messages.length}`) : ""),
-  );
-  lines.push(theme.fg("dim", "   assistant-message sequence in session append order"));
+  return lines;
+}
+
+/**
+ * Renders a 3-series stacked token-volume chart.
+ * Label column is 3 chars + "k│" = 5 chars wide.
+ * Priority (highest wins per cell): cacheRead > cacheWrite > input.
+ */
+function renderStackedSeriesChart(
+  theme: Theme,
+  seriesInput: number[],
+  seriesCacheRead: number[],
+  seriesCacheWrite: number[],
+  chartHeight: number,
+): { lines: string[]; unitTokens: number } {
+  const maxVal = Math.max(...seriesInput, ...seriesCacheRead, ...seriesCacheWrite, 1);
+  let unitTokens = 5000;
+  if (maxVal > chartHeight * unitTokens) {
+    unitTokens = Math.ceil(maxVal / chartHeight / 5000) * 5000;
+  }
+
+  const lines: string[] = [];
+  for (let row = chartHeight; row >= 1; row -= 1) {
+    const threshold = row * unitTokens;
+    const kVal = Math.round(threshold / 1000);
+    const label = `${String(kVal).padStart(3)}k│`;
+    const body = seriesInput
+      .map((_, i) => {
+        const inp = seriesInput[i]!;
+        const read = seriesCacheRead[i]!;
+        const write = seriesCacheWrite[i]!;
+        if (read >= threshold) return theme.fg("success", "▒");
+        if (write >= threshold) return theme.fg("warning", "░");
+        if (inp >= threshold) return theme.fg("accent", "▇");
+        return theme.fg("dim", "·");
+      })
+      .join("");
+    lines.push(theme.fg("muted", label) + body);
+  }
+  lines.push(theme.fg("muted", `    0│${theme.fg("dim", "─".repeat(seriesInput.length))}`));
+  return { lines, unitTokens };
+}
+
+function xAxisFooter(theme: Theme, bucketCount: number, totalMessages: number, indent: string): string[] {
+  const countStr = String(totalMessages);
+  const spacer = bucketCount > 2 ? " ".repeat(Math.max(1, bucketCount - countStr.length - 1)) : "";
+  return [
+    theme.fg("dim", `${indent}1`) + (bucketCount > 2 ? theme.fg("dim", `${spacer}${countStr}`) : ""),
+    theme.fg("dim", `${indent}assistant-message sequence in session append order`),
+  ];
+}
+
+// ─── Per-view renderers ───────────────────────────────────────────────────────
+
+function renderPerTurnPercent(
+  theme: Theme,
+  messages: AssistantUsageMetric[],
+  chartWidth: number,
+): string[] {
+  const lines: string[] = [];
+  const chartHeight = 10;
+  const buckets = bucketMessages(messages, chartWidth);
+  const values = buckets.map((bucket) => averageHitPercent(bucket));
+
+  lines.push(...renderBarChart(theme, values, chartHeight));
+  lines.push(...xAxisFooter(theme, values.length, messages.length, "   "));
   lines.push("");
 
   const recentCount = Math.min(8, messages.length);
@@ -87,13 +156,176 @@ export function renderGraphBody(theme: Theme, metrics: CacheSessionMetrics, widt
   lines.push(theme.fg("dim", "* = on current active branch"));
   for (const message of recent) {
     const label = `#${String(message.sequence).padStart(2, " ")}${message.isOnActiveBranch ? "*" : " "}`;
-    const model = `${message.provider}/${message.model}`;
     lines.push(
       `${theme.fg("muted", label)} ${formatPercent(message.cacheHitPercent).padStart(6, " ")}  ` +
         `in ${formatInt(message.input).padStart(6, " ")}  ` +
         `cache ${formatInt(message.cacheRead).padStart(6, " ")}  ` +
-        theme.fg("dim", model),
+        theme.fg("dim", `${message.provider}/${message.model}`),
     );
+  }
+  return lines;
+}
+
+function renderCumulativePercent(
+  theme: Theme,
+  messages: AssistantUsageMetric[],
+  chartWidth: number,
+  cumSeries: CumulativeSeries,
+): string[] {
+  const lines: string[] = [];
+  const chartHeight = 10;
+  const bucketed = bucketMax(cumSeries.cumHitPercent, chartWidth);
+
+  lines.push(...renderBarChart(theme, bucketed, chartHeight));
+  lines.push(...xAxisFooter(theme, bucketed.length, messages.length, "   "));
+  lines.push("");
+
+  const recentCount = Math.min(8, messages.length);
+  const startIdx = messages.length - recentCount;
+  const recent = messages.slice(-recentCount);
+  lines.push(theme.fg("accent", theme.bold(`Recent ${recentCount} turns`)));
+  lines.push(theme.fg("dim", "* = on current active branch  |  values are running totals"));
+  for (let i = 0; i < recent.length; i += 1) {
+    const message = recent[i]!;
+    const label = `#${String(message.sequence).padStart(2, " ")}${message.isOnActiveBranch ? "*" : " "}`;
+    const hitPct = cumSeries.cumHitPercent[startIdx + i]!;
+    const cInput = cumSeries.cumInput[startIdx + i]!;
+    const cRead = cumSeries.cumCacheRead[startIdx + i]!;
+    lines.push(
+      `${theme.fg("muted", label)} ${formatPercent(hitPct).padStart(6, " ")}  ` +
+        `cumIn ${formatInt(cInput).padStart(7, " ")}  ` +
+        `cumHit ${formatInt(cRead).padStart(7, " ")}  ` +
+        theme.fg("dim", `${message.provider}/${message.model}`),
+    );
+  }
+  return lines;
+}
+
+function renderCumulativeTotal(
+  theme: Theme,
+  messages: AssistantUsageMetric[],
+  chartWidth: number,
+  cumSeries: CumulativeSeries,
+): string[] {
+  const lines: string[] = [];
+  const chartHeight = 10;
+  const bucketedInput = bucketMax(cumSeries.cumInput, chartWidth);
+  const bucketedRead = bucketMax(cumSeries.cumCacheRead, chartWidth);
+  const bucketedWrite = bucketMax(cumSeries.cumCacheWrite, chartWidth);
+
+  const { lines: chartLines, unitTokens } = renderStackedSeriesChart(
+    theme,
+    bucketedInput,
+    bucketedRead,
+    bucketedWrite,
+    chartHeight,
+  );
+  lines.push(...chartLines);
+  lines.push(...xAxisFooter(theme, bucketedInput.length, messages.length, "     "));
+  lines.push("");
+
+  // Legend
+  lines.push(
+    theme.fg("accent", "▇") +
+      theme.fg("dim", " input (uncached)   ") +
+      theme.fg("warning", "░") +
+      theme.fg("dim", " cache write   ") +
+      theme.fg("success", "▒") +
+      theme.fg("dim", " cache read (hit)   ") +
+      theme.fg("dim", `1 row = ${formatInt(unitTokens)} tokens`),
+  );
+  lines.push("");
+
+  const recentCount = Math.min(8, messages.length);
+  const startIdx = messages.length - recentCount;
+  const recent = messages.slice(-recentCount);
+  lines.push(theme.fg("accent", theme.bold(`Recent ${recentCount} turns`)));
+  lines.push(theme.fg("dim", "* = on current active branch  |  values are running totals"));
+  for (let i = 0; i < recent.length; i += 1) {
+    const message = recent[i]!;
+    const label = `#${String(message.sequence).padStart(2, " ")}${message.isOnActiveBranch ? "*" : " "}`;
+    lines.push(
+      `${theme.fg("muted", label)} ` +
+        `cumIn ${formatInt(cumSeries.cumInput[startIdx + i]!).padStart(7, " ")}  ` +
+        `cumWrite ${formatInt(cumSeries.cumCacheWrite[startIdx + i]!).padStart(7, " ")}  ` +
+        `cumHit ${formatInt(cumSeries.cumCacheRead[startIdx + i]!).padStart(7, " ")}  ` +
+        theme.fg("dim", `${message.provider}/${message.model}`),
+    );
+  }
+  return lines;
+}
+
+// ─── Public entry point ───────────────────────────────────────────────────────
+
+export function renderGraphBody(
+  theme: Theme,
+  metrics: CacheSessionMetrics,
+  width: number,
+  view: GraphView = "per-turn",
+): string[] {
+  const messages = metrics.allMessages;
+  const lines: string[] = [];
+
+  lines.push(theme.fg("accent", theme.bold(`Cache hit trend (whole session timeline) — ${graphViewLabel(view)}`)));
+
+  switch (view) {
+    case "per-turn":
+      lines.push(theme.fg("dim", "Per-turn cache hit % = cacheRead / (input + cacheRead + cacheWrite)"));
+      break;
+    case "cumulative-percent":
+      lines.push(theme.fg("dim", "Running hit % = cumCacheRead / (cumInput + cumCacheRead + cumCacheWrite)"));
+      break;
+    case "cumulative-total":
+      lines.push(theme.fg("dim", "Running cumulative token volumes (input, cacheWrite, cacheRead)"));
+      break;
+  }
+
+  lines.push("");
+  lines.push(formatTotalsLine("Active branch", metrics.activeBranchTotals));
+  lines.push(formatTotalsLine("Whole tree", metrics.treeTotals));
+  lines.push("");
+
+  if (messages.length === 0) {
+    lines.push(
+      theme.fg("warning", "No assistant messages with usage data are available yet in this session."),
+    );
+    return lines;
+  }
+
+  // Summary stats line
+  if (view === "per-turn") {
+    const latest = messages[messages.length - 1]!;
+    lines.push(
+      [
+        `Latest: ${formatPercent(latest.cacheHitPercent)}`,
+        `Min: ${formatPercent(minHitPercent(messages))}`,
+        `Max: ${formatPercent(maxHitPercent(messages))}`,
+        `Turns: ${formatInt(messages.length)}`,
+      ].join(" • "),
+    );
+  } else if (view === "cumulative-percent") {
+    lines.push(`Turns: ${formatInt(messages.length)}`);
+  } else {
+    lines.push(`Turns: ${formatInt(messages.length)}`);
+  }
+  lines.push("");
+
+  const chartWidth = Math.max(10, width - 8);
+
+  // Compute cumulative series once for the two cumulative views
+  const cumSeries =
+    view !== "per-turn" ? computeCumulativeSeries(messages) : null;
+
+  switch (view) {
+    case "per-turn":
+      lines.push(...renderPerTurnPercent(theme, messages, chartWidth));
+      break;
+    case "cumulative-percent":
+      lines.push(...renderCumulativePercent(theme, messages, chartWidth, cumSeries!));
+      break;
+    case "cumulative-total":
+      lines.push(...renderCumulativeTotal(theme, messages, chartWidth, cumSeries!));
+      break;
   }
 
   return lines;

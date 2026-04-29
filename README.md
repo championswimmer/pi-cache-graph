@@ -15,11 +15,22 @@ Adds cache inspection commands:
 ## Commands
 
 ### `/cache graph`
-Opens a TUI overlay that shows:
-- cache hit % trend over time across assistant messages in session append order
-- latest / min / max cache hit rate
-- active-branch totals
-- whole-tree totals
+Opens a TUI overlay with **three switchable views**:
+
+| Key | View | Description |
+|-----|------|-------------|
+| `1` | Per-turn (%) | Cache hit % per individual turn (default) |
+| `2` | Cumulative (%) | Running cache hit % across all turns so far |
+| `3` | Cumulative (total) | Running cumulative token volumes (input / cacheWrite / cacheRead) |
+
+**Keyboard shortcuts inside the dialog:**
+- `1` / `2` / `3` — jump directly to that view
+- `v` — cycle view forward
+- `V` (Shift+v) — cycle view backward
+- `↑/↓`, `PgUp/PgDn`, `Home/End` — scroll
+- `q` / `Esc` — close
+
+All views show active-branch totals and whole-tree totals at the top.
 
 Cache hit % is computed as:
 
@@ -31,6 +42,8 @@ The denominator is the full prompt size that was sent in the turn:
 - `input` — fresh, non-cached prompt tokens
 - `cacheRead` — prompt tokens served from cache
 - `cacheWrite` — prompt tokens that were freshly written to cache this turn (Anthropic-style providers report this separately from `input`; OpenAI-style providers report `cacheWrite = 0`, so the formula behaves identically there)
+
+The **cumulative-total** chart uses distinct glyphs per series (`▇` input, `░` cacheWrite, `▒` cacheRead) with a dynamic scale shown in the legend (default: 1 row = 5,000 tokens).
 
 ### `/cache stats`
 Opens a TUI overlay table that shows:
@@ -94,6 +107,7 @@ npm run check
 - `index.ts` — extension entrypoint
 - `src/index.ts` — command registration
 - `src/session-data.ts` — session traversal and metric computation
+- `src/cumulative.ts` — cumulative series computation (pure, no UI dependency)
 - `src/cache-math.ts` — cache hit % and totals calculations
 - `src/format-utils.ts` — number/percent formatting helpers
 - `src/graph-view.ts` — graph rendering

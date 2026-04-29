@@ -16,10 +16,18 @@ function fitLine(content: string, width: number): string {
 
 export interface ScrollDialogOptions {
   title: string;
+  /** If provided, called at render time and takes precedence over `title`. */
+  getTitle?: () => string;
   helpText?: string;
   width?: number;
   maxBodyRows?: number;
   renderBody: (innerWidth: number) => string[];
+  /**
+   * Called before default scroll/close handling.
+   * Return `true` if the key was consumed — the dialog will invalidate and re-render.
+   * Return `false` to fall through to default handling.
+   */
+  onKey?: (data: string) => boolean;
 }
 
 export class ScrollDialog implements Component {
@@ -35,6 +43,14 @@ export class ScrollDialog implements Component {
 
   handleInput(data: string): void {
     const pageSize = Math.max(1, (this.options.maxBodyRows ?? DEFAULT_DIALOG_BODY_ROWS) - 2);
+
+    if (this.options.onKey) {
+      const handled = this.options.onKey(data);
+      if (handled) {
+        this.invalidate();
+        return;
+      }
+    }
 
     if (matchesKey(data, Key.escape) || data === "q") {
       this.onClose();
@@ -89,7 +105,8 @@ export class ScrollDialog implements Component {
     const bottomBorder = this.theme.fg("borderAccent", `╰${repeat("─", innerWidth)}╯`);
     const border = this.theme.fg("border", "│");
 
-    const title = this.theme.fg("accent", this.theme.bold(` ${this.options.title} `));
+    const resolvedTitle = this.options.getTitle ? this.options.getTitle() : this.options.title;
+    const title = this.theme.fg("accent", this.theme.bold(` ${resolvedTitle} `));
     const titleSuffix = bodyLines.length > maxBodyRows
       ? this.theme.fg("dim", ` ${scrollOffset + 1}-${Math.min(scrollOffset + visibleBodyLines.length, bodyLines.length)}/${bodyLines.length}`)
       : "";

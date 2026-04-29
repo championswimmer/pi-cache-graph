@@ -1,6 +1,6 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { exportStatsCsv } from "./export.js";
-import { renderGraphBody } from "./graph-view.js";
+import { type GraphView, GRAPH_VIEWS, graphViewLabel, renderGraphBody } from "./graph-view.js";
 import { ScrollDialog } from "./scroll-dialog.js";
 import { collectCacheSessionMetrics } from "./session-data.js";
 import { renderStatsBody } from "./stats-view.js";
@@ -50,16 +50,58 @@ export default function cacheGraphExtension(pi: ExtensionAPI): void {
         return;
       }
 
+      if (subcommand === "graph") {
+        let currentView: GraphView = "per-turn";
+
+        await ctx.ui.custom<void>(
+          (_tui, theme, _keybindings, done) =>
+            new ScrollDialog(
+              theme,
+              {
+                title: "Context Cache Graph",
+                getTitle: () => `Context Cache Graph — ${graphViewLabel(currentView)}`,
+                helpText: "1/2/3 view • v cycle • ↑/↓ scroll • PgUp/PgDn • q/Esc close",
+                renderBody: (innerWidth) => renderGraphBody(theme, metrics, innerWidth, currentView),
+                onKey: (data) => {
+                  const prev = currentView;
+                  if (data === "1") currentView = "per-turn";
+                  else if (data === "2") currentView = "cumulative-percent";
+                  else if (data === "3") currentView = "cumulative-total";
+                  else if (data === "v") {
+                    const idx = GRAPH_VIEWS.indexOf(currentView);
+                    currentView = GRAPH_VIEWS[(idx + 1) % GRAPH_VIEWS.length]!;
+                  } else if (data === "V") {
+                    const idx = GRAPH_VIEWS.indexOf(currentView);
+                    currentView = GRAPH_VIEWS[(idx + GRAPH_VIEWS.length - 1) % GRAPH_VIEWS.length]!;
+                  } else {
+                    return false;
+                  }
+                  return currentView !== prev || true; // always re-render on a recognised key
+                },
+              },
+              () => done(undefined),
+            ),
+          {
+            overlay: true,
+            overlayOptions: {
+              anchor: "center",
+              width: "90%",
+              maxHeight: "90%",
+              margin: 1,
+            },
+          },
+        );
+        return;
+      }
+
+      // stats
       await ctx.ui.custom<void>(
         (_tui, theme, _keybindings, done) =>
           new ScrollDialog(
             theme,
             {
-              title: subcommand === "graph" ? "Context Cache Graph" : "Context Cache Stats",
-              renderBody: (innerWidth) =>
-                subcommand === "graph"
-                  ? renderGraphBody(theme, metrics, innerWidth)
-                  : renderStatsBody(theme, metrics, innerWidth),
+              title: "Context Cache Stats",
+              renderBody: (innerWidth) => renderStatsBody(theme, metrics, innerWidth),
             },
             () => done(undefined),
           ),
