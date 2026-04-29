@@ -1,6 +1,6 @@
 import type { Theme } from "@mariozechner/pi-coding-agent";
 import type { AssistantUsageMetric, CacheSessionMetrics } from "./types.js";
-import { formatInt, formatPercent, formatTotalsLine } from "./render-utils.js";
+import { formatInt, formatPercent, formatTotalsLine } from "./format-utils.js";
 
 function bucketMessages(messages: AssistantUsageMetric[], bucketCount: number): AssistantUsageMetric[][] {
   if (messages.length <= bucketCount) {

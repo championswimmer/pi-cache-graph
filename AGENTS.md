@@ -89,14 +89,16 @@ The extension does **not** currently compute stats from user/tool/custom message
 Cache hit % is defined as:
 
 ```text
-cacheRead / (input + cacheRead)
+cacheRead / (input + cacheRead + cacheWrite)
 ```
 
 Behavior:
 - if denominator is `0`, cache hit % is `0`
 
 Reason:
-- pi normalizes provider usage so `input + cacheRead` is the practical basis for prompt-side cache hit rate in this extension
+- the denominator must equal the full prompt size that was sent on the turn
+- Anthropic-style providers report `input` as only the fresh non-cached portion and report newly-cached prompt tokens separately as `cacheWrite`; both must be included in the denominator alongside `cacheRead`
+- OpenAI-style providers report `cacheWrite = 0` (the freshly cached tokens are already counted inside `input`), so this formula is backwards-compatible there
 
 ## Session/tree semantics
 

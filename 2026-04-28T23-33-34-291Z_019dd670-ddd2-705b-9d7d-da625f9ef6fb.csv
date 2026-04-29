@@ -1,0 +1,11 @@
+row_type,scope,assistant_messages,sequence,active_branch_sequence,is_on_active_branch,entry_id,timestamp,time,provider,model,model_key,sent_tokens,received_tokens,cache_hit_tokens,cache_write_tokens,total_tokens,cache_hit_percent,delta_sent_tokens,delta_received_tokens,delta_cache_hit_tokens,delta_cache_write_tokens,delta_hit_rate_percent,notes
+summary,active_branch,7,,,,,,,,,,8468,6328,87214,33044,135054,91.14985054660228,,,,,,Matches the active-branch cumulative totals shown in /cache stats
+summary,whole_tree,7,,,,,,,,,,8468,6328,87214,33044,135054,91.14985054660228,,,,,,Matches the whole-tree cumulative totals shown in /cache stats
+summary,delta_tree_minus_branch,0,,,,,,,,,,,,,,,,0,0,0,0,0,Matches the delta row shown in /cache stats
+message,active_branch,,1,1,true,0858abeb,2026-04-28T23:33:55.848Z,23:33:55,github-copilot,gpt-5.4,github-copilot/gpt-5.4,2470,80,5632,0,8182,69.51370032090843,,,,,,Matches a per-message row in /cache stats
+message,active_branch,,2,2,true,b00b1f6b,2026-04-28T23:34:02.368Z,23:34:02,github-copilot,gpt-5.4,github-copilot/gpt-5.4,1223,434,8064,0,9721,86.83105416173146,,,,,,Matches a per-message row in /cache stats
+message,active_branch,,3,3,true,f908acb2,2026-04-28T23:42:24.809Z,23:42:24,github-copilot,gpt-5.4,github-copilot/gpt-5.4,1701,132,7936,0,9769,82.34927882120992,,,,,,Matches a per-message row in /cache stats
+message,active_branch,,4,4,true,2d187e27,2026-04-28T23:42:49.909Z,23:42:49,github-copilot,gpt-5.4,github-copilot/gpt-5.4,3066,1456,9600,0,14122,75.7934628138323,,,,,,Matches a per-message row in /cache stats
+message,active_branch,,5,5,true,8d5c20c3,2026-04-28T23:54:16.568Z,23:54:16,github-copilot,claude-opus-4.7,github-copilot/claude-opus-4.7,6,191,0,26630,26827,0,,,,,,Matches a per-message row in /cache stats
+message,active_branch,,6,6,true,a9d09f81,2026-04-28T23:55:12.824Z,23:55:12,github-copilot,claude-opus-4.7,github-copilot/claude-opus-4.7,1,3646,26630,2722,32999,99.99624497765762,,,,,,Matches a per-message row in /cache stats
+message,active_branch,,7,7,true,d630150e,2026-04-28T23:55:19.028Z,23:55:19,github-copilot,claude-opus-4.7,github-copilot/claude-opus-4.7,1,389,29352,3692,33434,99.99659319320001,,,,,,Matches a per-message row in /cache stats

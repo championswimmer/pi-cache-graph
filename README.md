@@ -18,8 +18,13 @@ Opens a TUI overlay that shows:
 Cache hit % is computed as:
 
 ```text
-cacheRead / (input + cacheRead)
+cacheRead / (input + cacheRead + cacheWrite)
 ```
+
+The denominator is the full prompt size that was sent in the turn:
+- `input` — fresh, non-cached prompt tokens
+- `cacheRead` — prompt tokens served from cache
+- `cacheWrite` — prompt tokens that were freshly written to cache this turn (Anthropic-style providers report this separately from `input`; OpenAI-style providers report `cacheWrite = 0`, so the formula behaves identically there)
 
 ### `/cache stats`
 Opens a TUI overlay table that shows:

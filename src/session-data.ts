@@ -1,37 +1,12 @@
 import type { AssistantMessage } from "@mariozechner/pi-ai";
 import type { SessionEntry, SessionManager } from "@mariozechner/pi-coding-agent";
-import type { AssistantUsageMetric, CacheSessionMetrics, CacheUsageTotals } from "./types.js";
-
-function emptyTotals(): CacheUsageTotals {
-  return {
-    input: 0,
-    output: 0,
-    cacheRead: 0,
-    cacheWrite: 0,
-    totalTokens: 0,
-    assistantMessages: 0,
-  };
-}
-
-function addToTotals(totals: CacheUsageTotals, message: AssistantUsageMetric): void {
-  totals.input += message.input;
-  totals.output += message.output;
-  totals.cacheRead += message.cacheRead;
-  totals.cacheWrite += message.cacheWrite;
-  totals.totalTokens += message.totalTokens;
-  totals.assistantMessages += 1;
-}
+import { addToTotals, computeCacheHitPercent, emptyTotals } from "./cache-math.js";
+import type { AssistantUsageMetric, CacheSessionMetrics } from "./types.js";
 
 function isAssistantMessageEntry(entry: SessionEntry): entry is Extract<SessionEntry, { type: "message" }> & {
   message: AssistantMessage;
 } {
   return entry.type === "message" && entry.message.role === "assistant";
-}
-
-function computeCacheHitPercent(input: number, cacheRead: number): number {
-  const denominator = input + cacheRead;
-  if (denominator <= 0) return 0;
-  return (cacheRead / denominator) * 100;
 }
 
 type SessionReader = Pick<SessionManager, "getEntries" | "getBranch">;
@@ -65,7 +40,11 @@ export function collectCacheSessionMetrics(sessionManager: SessionReader): Cache
       cacheRead: entry.message.usage.cacheRead,
       cacheWrite: entry.message.usage.cacheWrite,
       totalTokens: entry.message.usage.totalTokens,
-      cacheHitPercent: computeCacheHitPercent(entry.message.usage.input, entry.message.usage.cacheRead),
+      cacheHitPercent: computeCacheHitPercent(
+        entry.message.usage.input,
+        entry.message.usage.cacheRead,
+        entry.message.usage.cacheWrite,
+      ),
       isOnActiveBranch: activeBranchIds.has(entry.id),
     };
 

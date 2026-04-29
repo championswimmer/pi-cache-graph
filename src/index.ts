@@ -1,7 +1,7 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { exportStatsCsv } from "./export.js";
 import { renderGraphBody } from "./graph-view.js";
-import { ScrollDialog } from "./render-utils.js";
+import { ScrollDialog } from "./scroll-dialog.js";
 import { collectCacheSessionMetrics } from "./session-data.js";
 import { renderStatsBody } from "./stats-view.js";
 

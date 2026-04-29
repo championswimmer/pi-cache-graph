@@ -1,6 +1,6 @@
 import type { Theme } from "@mariozechner/pi-coding-agent";
 import type { AssistantUsageMetric, CacheSessionMetrics } from "./types.js";
-import { formatInt, formatPercent, formatTotalsLine, shortModelName, summarizeHitPercent } from "./render-utils.js";
+import { formatInt, formatPercent, formatTotalsLine, shortModelName, summarizeHitPercent } from "./format-utils.js";
 
 function pad(value: string, width: number, direction: "left" | "right" = "right"): string {
   if (value.length >= width) return value;
