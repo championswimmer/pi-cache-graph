@@ -2,7 +2,7 @@ import type { Theme } from "@mariozechner/pi-coding-agent";
 import type { AssistantUsageMetric, CacheSessionMetrics } from "./types.js";
 import { formatInt, formatPercent, formatTotalsLine } from "./format-utils.js";
 
-function bucketMessages(messages: AssistantUsageMetric[], bucketCount: number): AssistantUsageMetric[][] {
+export function bucketMessages(messages: AssistantUsageMetric[], bucketCount: number): AssistantUsageMetric[][] {
   if (messages.length <= bucketCount) {
     return messages.map((message) => [message]);
   }
@@ -16,18 +16,18 @@ function bucketMessages(messages: AssistantUsageMetric[], bucketCount: number): 
   return buckets;
 }
 
-function averageHitPercent(messages: AssistantUsageMetric[]): number {
+export function averageHitPercent(messages: AssistantUsageMetric[]): number {
   if (messages.length === 0) return 0;
   const total = messages.reduce((sum, message) => sum + message.cacheHitPercent, 0);
   return total / messages.length;
 }
 
-function minHitPercent(messages: AssistantUsageMetric[]): number {
+export function minHitPercent(messages: AssistantUsageMetric[]): number {
   if (messages.length === 0) return 0;
   return Math.min(...messages.map((message) => message.cacheHitPercent));
 }
 
-function maxHitPercent(messages: AssistantUsageMetric[]): number {
+export function maxHitPercent(messages: AssistantUsageMetric[]): number {
   if (messages.length === 0) return 0;
   return Math.max(...messages.map((message) => message.cacheHitPercent));
 }

@@ -4,7 +4,7 @@ import type { SessionManager } from "@mariozechner/pi-coding-agent";
 import type { AssistantUsageMetric, CacheSessionMetrics } from "./types.js";
 import { summarizeHitPercent } from "./format-utils.js";
 
-function csvEscape(value: string | number | boolean | null | undefined): string {
+export function csvEscape(value: string | number | boolean | null | undefined): string {
   const text = value == null ? "" : String(value);
   if (/[",\n]/.test(text)) {
     return `"${text.replaceAll('"', '""')}"`;
@@ -12,7 +12,7 @@ function csvEscape(value: string | number | boolean | null | undefined): string 
   return text;
 }
 
-function sanitizeFileName(name: string): string {
+export function sanitizeFileName(name: string): string {
   const sanitized = name
     .trim()
     .replace(/[^a-zA-Z0-9._-]+/g, "-")
@@ -131,7 +131,7 @@ function messageRows(metrics: CacheSessionMetrics): CsvRow[] {
   }));
 }
 
-function buildCsv(metrics: CacheSessionMetrics): string {
+export function buildCsv(metrics: CacheSessionMetrics): string {
   const rows: CsvRow[] = [...summaryRows(metrics), ...messageRows(metrics)];
   const csvRows = [headers.join(",")];
 
