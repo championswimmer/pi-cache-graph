@@ -1,6 +1,6 @@
 {
   "name": "pi-cache-graph",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Pi extension for visualizing context cache distribution and statistics",
   "type": "module",
   "pi": {
