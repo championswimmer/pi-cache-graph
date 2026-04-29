@@ -1,6 +1,12 @@
 # pi-cache-graph
 
-A project-local pi extension that adds cache inspection commands:
+A project-local [pi](https://github.com/mariozechner/pi) extension that adds cache inspection commands for monitoring LLM context cache usage.
+
+This extension was built primarily to add **observability to the [pi-context-prune](https://github.com/championswimmer/pi-context-prune) extension** — which compacts the session context to keep token usage down. `pi-cache-graph` lets you see in real time how effectively the cache is being used and how pruning affects cache hit rates over a session.
+
+![pi-cache-graph screenshot](docs/screenshot.png)
+
+Adds cache inspection commands:
 
 - `/cache graph` — shows cache hit % over time for assistant turns across the current session timeline
 - `/cache stats` — shows per-message token/cache breakdown for assistant messages across the whole session tree, plus cumulative totals
@@ -88,6 +94,11 @@ npm run check
 - `index.ts` — extension entrypoint
 - `src/index.ts` — command registration
 - `src/session-data.ts` — session traversal and metric computation
+- `src/cache-math.ts` — cache hit % and totals calculations
+- `src/format-utils.ts` — number/percent formatting helpers
 - `src/graph-view.ts` — graph rendering
 - `src/stats-view.ts` — stats table rendering
-- `src/render-utils.ts` — shared TUI dialog + formatting helpers
+- `src/scroll-dialog.ts` — scrollable TUI overlay component
+- `src/render-utils.ts` — shared rendering helpers
+- `src/export.ts` — CSV export logic
+- `src/types.ts` — shared TypeScript interfaces
