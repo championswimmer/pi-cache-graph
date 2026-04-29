@@ -49,7 +49,7 @@ The **cumulative-total** chart uses distinct glyphs per series (`â–‡` input, `â–
 Opens a TUI overlay table that shows:
 - one row per assistant message with usage data
 - whether the message is on the current active branch
-- sent / received / cache-hit / cache-write tokens
+- prompt / received / cache-hit / cache-write tokens
 - per-message cache hit %
 - cumulative totals for the active branch and the whole tree
 

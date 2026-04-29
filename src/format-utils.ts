@@ -21,7 +21,7 @@ export function formatTotalsLine(label: string, totals: CacheUsageTotals): strin
   return [
     `${label}:`,
     `${formatInt(totals.assistantMessages)} turns`,
-    `sent ${formatInt(totals.input)}`,
+    `prompt ${formatInt(totals.input + totals.cacheRead + totals.cacheWrite)}`,
     `received ${formatInt(totals.output)}`,
     `cache hit ${formatInt(totals.cacheRead)}`,
     `cache write ${formatInt(totals.cacheWrite)}`,

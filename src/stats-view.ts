@@ -18,7 +18,7 @@ function buildRow(metric: AssistantUsageMetric, includeEntryId: boolean, include
     pad(String(metric.sequence), 4, "left"),
     pad(metric.isOnActiveBranch ? "*" : " ", 1),
     pad(truncate(shortModelName(metric.provider, metric.model), 24), 24),
-    pad(formatInt(metric.input), 9, "left"),
+    pad(formatInt(metric.input + metric.cacheRead + metric.cacheWrite), 9, "left"),
     pad(formatInt(metric.output), 9, "left"),
     pad(formatInt(metric.cacheRead), 9, "left"),
     pad(formatInt(metric.cacheWrite), 9, "left"),
@@ -36,7 +36,7 @@ function buildHeader(includeEntryId: boolean, includeTimestamp: boolean): string
     pad("#", 4, "left"),
     pad("B", 1),
     pad("model", 24),
-    pad("sent", 9, "left"),
+    pad("prompt", 9, "left"),
     pad("recv", 9, "left"),
     pad("hit", 9, "left"),
     pad("write", 9, "left"),
@@ -57,7 +57,7 @@ function buildCumulativeSummary(theme: Theme, metrics: CacheSessionMetrics): str
     theme.fg("accent", theme.bold("Cumulative totals")),
     formatTotalsLine("Active branch", metrics.activeBranchTotals),
     formatTotalsLine("Whole tree", metrics.treeTotals),
-    `Delta (tree - branch): sent ${formatInt(metrics.treeTotals.input - metrics.activeBranchTotals.input)} • ` +
+    `Delta (tree - branch): prompt ${formatInt((metrics.treeTotals.input + metrics.treeTotals.cacheRead + metrics.treeTotals.cacheWrite) - (metrics.activeBranchTotals.input + metrics.activeBranchTotals.cacheRead + metrics.activeBranchTotals.cacheWrite))} • ` +
       `received ${formatInt(metrics.treeTotals.output - metrics.activeBranchTotals.output)} • ` +
       `cache hit ${formatInt(metrics.treeTotals.cacheRead - metrics.activeBranchTotals.cacheRead)} • ` +
       `cache write ${formatInt(metrics.treeTotals.cacheWrite - metrics.activeBranchTotals.cacheWrite)} • ` +
