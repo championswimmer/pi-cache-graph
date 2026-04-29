@@ -61,28 +61,41 @@ Writes a CSV to the project root:
 - contains summary rows plus the per-message rows shown in `/cache stats`
 - can be opened in Excel to build graphs from the exported columns
 
-## Local usage
+## Install from npm
 
-Run pi with this extension from the current folder:
+Install globally via pi:
 
 ```bash
+pi install pi-cache-graph
+```
+
+Or add it to your pi settings manually in `.pi/settings.json`:
+
+```json
+{
+  "packages": [
+    "pi-cache-graph"
+  ]
+}
+```
+
+Once installed, the `/cache` commands are available in any pi session.
+
+## Install from local source (development)
+
+Clone the repo and run pi with this extension directly:
+
+```bash
+git clone https://github.com/championswimmer/pi-cache-graph.git
+cd pi-cache-graph
+npm install
 pi -e .
 ```
 
-Then use:
-
-```text
-/cache graph
-/cache stats
-/cache export
-```
-
-## Install as a local package
-
-You can also install the package path into pi:
+Or install the local path into pi:
 
 ```bash
-pi install .
+pi install /path/to/pi-cache-graph
 ```
 
 Or add it to `.pi/settings.json`:
@@ -90,7 +103,7 @@ Or add it to `.pi/settings.json`:
 ```json
 {
   "packages": [
-    "."
+    "/path/to/pi-cache-graph"
   ]
 }
 ```
