@@ -115,6 +115,17 @@ npm install
 npm run check
 ```
 
+## Maintainer release workflow
+
+This repo includes a project-local Pi release workflow for maintainers:
+
+- prompt template: `/release <major|minor|patch>`
+- skill: `.agents/skills/release/SKILL.md`
+- helper script: `scripts/release.mjs`
+- detailed notes: `docs/releasing.md`
+
+The release flow bumps the version, creates the release tag, pushes `main` plus the tag, and then relies on `.github/workflows/publish.yml` to publish to npm.
+
 ## Files
 
 - `index.ts` — extension entrypoint
