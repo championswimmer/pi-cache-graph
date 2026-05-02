@@ -105,7 +105,15 @@ export default function cacheGraphExtension(pi: ExtensionAPI): void {
             theme,
             {
               title: "Context Cache Stats",
+              helpText: "r refresh • ↑/↓ scroll • PgUp/PgDn • q/Esc close",
               renderBody: (innerWidth) => renderStatsBody(theme, metrics, innerWidth),
+              onKey: (data) => {
+                if (data === "r") {
+                  metrics = collectCacheSessionMetrics(ctx.sessionManager);
+                  return true;
+                }
+                return false;
+              },
             },
             () => done(undefined),
           ),
