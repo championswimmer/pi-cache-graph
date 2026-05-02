@@ -34,7 +34,7 @@ export default function cacheGraphExtension(pi: ExtensionAPI): void {
         return;
       }
 
-      const metrics = collectCacheSessionMetrics(ctx.sessionManager);
+      let metrics = collectCacheSessionMetrics(ctx.sessionManager);
 
       if (subcommand === "export") {
         const filePath = await exportStatsCsv(ctx.cwd, ctx.sessionManager, metrics);
@@ -60,9 +60,13 @@ export default function cacheGraphExtension(pi: ExtensionAPI): void {
               {
                 title: "Context Cache Graph",
                 getTitle: () => `Context Cache Graph — ${graphViewLabel(currentView)}`,
-                helpText: "1/2/3 view • v cycle • ↑/↓ scroll • PgUp/PgDn • q/Esc close",
+                helpText: "1/2/3 view • r refresh • v cycle • ↑/↓ scroll • PgUp/PgDn • q/Esc close",
                 renderBody: (innerWidth) => renderGraphBody(theme, metrics, innerWidth, currentView),
                 onKey: (data) => {
+                  if (data === "r") {
+                    metrics = collectCacheSessionMetrics(ctx.sessionManager);
+                    return true;
+                  }
                   const prev = currentView;
                   if (data === "1") currentView = "per-turn";
                   else if (data === "2") currentView = "cumulative-percent";
