@@ -15,6 +15,22 @@ The extension reads usage data from the current pi session and:
 - renders a TUI stats dialog with per-message and cumulative token/cache data
 - exports the same stats-oriented data to CSV for Excel/charting
 
+## Quick code context
+
+If you're orienting yourself in the codebase, start with:
+- `src/index.ts` — command registration and subcommand routing
+- `src/session-data.ts` — builds metrics from session entries
+- `src/types.ts` — shared metric and totals types
+- `src/graph-view.ts`, `src/stats-view.ts`, `src/export.ts` — rendering/export layers
+- `src/scroll-dialog.ts` — reusable scrollable TUI wrapper
+- `src/render-utils.ts` — legacy barrel re-export for formatting and dialog helpers; prefer source modules
+
+Architecture:
+- Extension layer: `src/index.ts`
+- Data layer: `src/session-data.ts`
+- View layer: `src/graph-view.ts`, `src/stats-view.ts`, `src/export.ts`
+- TUI layer: `src/scroll-dialog.ts`
+
 ## How the extension is loaded
 
 Pi loads the extension via `package.json`:
@@ -309,5 +325,4 @@ Minimum files likely affected:
 
 ## Historical note
 
-`context.md` contains older planning/proposal notes and may drift from the implementation.
-Treat the actual source files and `README.md` as authoritative over `context.md`.
+This file now subsumes the old root context notes. Treat the actual source files and `README.md` as authoritative over any planning notes.
