@@ -30,7 +30,7 @@ The npm publish step is handled by:
 
 - `.github/workflows/publish.yml`
 
-That workflow runs on pushed tags matching `v<semver>` and executes `npm publish --access public` with the repo's `NPM_TOKEN` secret.
+That workflow runs on pushed tags matching `v<semver>` and executes `npm publish --access public` via npm trusted publishing using GitHub Actions OIDC, without a long-lived `NPM_TOKEN` secret.
 
 ## Required behavior
 

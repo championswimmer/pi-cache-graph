@@ -41,7 +41,7 @@ Pushing a matching tag triggers:
 
 - `.github/workflows/publish.yml`
 
-That workflow runs `npm publish --access public` using the repository `NPM_TOKEN` secret.
+That workflow uses npm trusted publishing via GitHub Actions OIDC (`id-token: write`) and runs `npm publish --access public` without a long-lived `NPM_TOKEN` secret.
 
 ## Direct CLI fallback
 
