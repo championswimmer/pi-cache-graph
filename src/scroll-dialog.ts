@@ -1,6 +1,6 @@
-import type { Theme } from "@mariozechner/pi-coding-agent";
-import { Key, matchesKey, truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
-import type { Component } from "@mariozechner/pi-tui";
+import type { Theme } from "@earendil-works/pi-coding-agent";
+import { Key, matchesKey, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
+import type { Component } from "@earendil-works/pi-tui";
 
 const DEFAULT_DIALOG_BODY_ROWS = Math.max(10, Math.min(28, (process.stdout.rows ?? 30) - 10));
 

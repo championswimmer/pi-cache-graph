@@ -194,7 +194,7 @@ Used for:
 
 ### Scrollable TUI dialog component
 - `src/scroll-dialog.ts`
-  - `ScrollDialog` class implementing `Component` from `@mariozechner/pi-tui`
+  - `ScrollDialog` class implementing `Component` from `@earendil-works/pi-tui`
   - render-caches by width; `invalidate()` clears cache to force re-render
   - `onKey` callback allows callers to handle keys before default scroll/close handling
   - `getTitle` callback allows dynamic titles (used by graph for view name)
@@ -230,7 +230,7 @@ Used for:
 ## TUI implementation notes
 
 The TUI uses `ScrollDialog` from `src/scroll-dialog.ts`:
-- Implements `Component` from `@mariozechner/pi-tui`
+- Implements `Component` from `@earendil-works/pi-tui`
 - Renders into `ctx.ui.custom(..., { overlay: true })`
 - Render-caches lines by width; invalidated on key press
 - Default body height: clamped between 10 and 28 rows based on terminal height

@@ -1,6 +1,6 @@
 import { writeFile } from "node:fs/promises";
 import { basename, extname, join } from "node:path";
-import type { SessionManager } from "@mariozechner/pi-coding-agent";
+import type { SessionManager } from "@earendil-works/pi-coding-agent";
 import type { AssistantUsageMetric, CacheSessionMetrics } from "./types.js";
 import { summarizeHitPercent } from "./format-utils.js";
 

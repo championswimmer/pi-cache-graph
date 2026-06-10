@@ -1,4 +1,4 @@
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { exportStatsCsv } from "./export.js";
 import { type GraphView, GRAPH_VIEWS, graphViewLabel, renderGraphBody } from "./graph-view.js";
 import { ScrollDialog } from "./scroll-dialog.js";

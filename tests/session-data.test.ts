@@ -5,7 +5,7 @@ import type { AssistantUsageMetric } from "../src/types.js";
 
 // ---------------------------------------------------------------------------
 // Helpers to build fake SessionEntry objects
-// The real types come from @mariozechner/pi-coding-agent, but since TypeScript
+// The real types come from @earendil-works/pi-coding-agent, but since TypeScript
 // uses structural typing we can construct inline stubs and cast them.
 // ---------------------------------------------------------------------------
 

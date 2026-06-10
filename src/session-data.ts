@@ -1,5 +1,5 @@
-import type { AssistantMessage } from "@mariozechner/pi-ai";
-import type { SessionEntry, SessionManager } from "@mariozechner/pi-coding-agent";
+import type { AssistantMessage } from "@earendil-works/pi-ai";
+import type { SessionEntry, SessionManager } from "@earendil-works/pi-coding-agent";
 import { addToTotals, computeCacheHitPercent, emptyTotals } from "./cache-math.js";
 import type { AssistantUsageMetric, CacheSessionMetrics } from "./types.js";
 

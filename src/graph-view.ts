@@ -1,4 +1,4 @@
-import type { Theme } from "@mariozechner/pi-coding-agent";
+import type { Theme } from "@earendil-works/pi-coding-agent";
 import type { AssistantUsageMetric, CacheSessionMetrics } from "./types.js";
 import { formatInt, formatPercent, formatTotalsLine } from "./format-utils.js";
 import { computeCumulativeSeries, type CumulativeSeries } from "./cumulative.js";
