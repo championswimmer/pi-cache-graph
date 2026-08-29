@@ -1,5 +1,8 @@
 # pi-cache-graph
 
+[![npm version](https://img.shields.io/npm/v/pi-cache-graph.svg)](https://www.npmjs.com/package/pi-cache-graph)
+[![npm downloads](https://img.shields.io/npm/dt/pi-cache-graph.svg)](https://www.npmjs.com/package/pi-cache-graph)
+
 A project-local [pi](https://github.com/mariozechner/pi) extension that adds cache inspection commands for monitoring LLM context cache usage.
 
 This extension was built primarily to add **observability to the [pi-context-prune](https://github.com/championswimmer/pi-context-prune) extension** — which compacts the session context to keep token usage down. `pi-cache-graph` lets you see in real time how effectively the cache is being used and how pruning affects cache hit rates over a session.
