@@ -3,6 +3,7 @@ import { exportStatsCsv } from "./export.js";
 import { type GraphView, GRAPH_VIEWS, graphViewLabel, renderGraphBody } from "./graph-view.js";
 import { ScrollDialog } from "./scroll-dialog.js";
 import { collectCacheSessionMetrics } from "./session-data.js";
+import { collectAgentCacheMetrics, listCacheAgents } from "./subagent-data.js";
 import { renderStatsBody } from "./stats-view.js";
 
 function normalizeSubcommand(args: string): string {
@@ -52,6 +53,21 @@ export default function cacheGraphExtension(pi: ExtensionAPI): void {
 
       if (subcommand === "graph") {
         let currentView: GraphView = "per-turn";
+        let agents = listCacheAgents(ctx.sessionManager);
+        let selectedAgent = 0;
+        let agentError: string | undefined;
+
+        const loadSelectedAgent = () => {
+          const result = collectAgentCacheMetrics(ctx.sessionManager, agents[selectedAgent]!);
+          metrics = result.metrics;
+          agentError = result.error;
+        };
+        const refresh = () => {
+          const path = agents[selectedAgent]?.path;
+          agents = listCacheAgents(ctx.sessionManager);
+          selectedAgent = Math.max(0, agents.findIndex((agent) => agent.path === path));
+          loadSelectedAgent();
+        };
 
         await ctx.ui.custom<void>(
           (_tui, theme, _keybindings, done) =>
@@ -59,12 +75,19 @@ export default function cacheGraphExtension(pi: ExtensionAPI): void {
               theme,
               {
                 title: "Context Cache Graph",
-                getTitle: () => `Context Cache Graph — ${graphViewLabel(currentView)}`,
-                helpText: "1/2/3 view • r refresh • v cycle • ↑/↓ scroll • PgUp/PgDn • q/Esc close",
-                renderBody: (innerWidth) => renderGraphBody(theme, metrics, innerWidth, currentView),
+                getTitle: () => `Context Cache Graph — ${agents[selectedAgent]?.path ?? "/root"} — ${graphViewLabel(currentView)}`,
+                helpText: "1/2/3 view • [/] agent • r refresh • v cycle • ↑/↓ scroll • q/Esc close",
+                renderBody: (innerWidth) => agentError
+                  ? [theme.fg("warning", agentError), "Press r to retry or [/] to select another agent."]
+                  : renderGraphBody(theme, metrics, innerWidth, currentView),
                 onKey: (data) => {
                   if (data === "r") {
-                    metrics = collectCacheSessionMetrics(ctx.sessionManager);
+                    refresh();
+                    return true;
+                  }
+                  if (data === "[" || data === "]") {
+                    selectedAgent = (selectedAgent + (data === "]" ? 1 : agents.length - 1)) % agents.length;
+                    loadSelectedAgent();
                     return true;
                   }
                   const prev = currentView;
