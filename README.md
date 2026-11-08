@@ -40,12 +40,12 @@ Opens a TUI overlay with **three switchable views**:
 - `1` / `2` / `3` — jump directly to that view
 - `v` — cycle view forward
 - `V` (Shift+v) — cycle view backward
-- `[` / `]` — select the previous / next agent
+- `←` / `→` (or `[` / `]`) — select the previous / next agent
 - `r` — refresh the agent list and selected graph
 - `↑/↓`, `PgUp/PgDn`, `Home/End` — scroll
 - `q` / `Esc` — close
 
-The graph starts with the main session selected. When [pi-subagent-manager](https://github.com/championswimmer/pi-subagent-manager) has registered subagents on the current branch, use `[` and `]` to view their individual graphs. Press `r` to discover newly registered agents and reload completed, persisted turns; a response still streaming may not yet appear. Inherited parent context is excluded from subagent usage so it is not counted as a subagent turn. `/cache stats` and `/cache export` continue to use the current session.
+The graph starts with the main session selected. When [pi-subagent-manager](https://github.com/championswimmer/pi-subagent-manager) has registered subagents on the current branch, use `←` and `→` (or `[` and `]`, not `/`) to view their individual graphs. Completed and stopped agents remain selectable while registered on that branch. Press `r` to discover newly registered agents and reload completed, persisted turns; a response still streaming may not yet appear. Inherited parent context is excluded from subagent usage so it is not counted as a subagent turn. `/cache stats` and `/cache export` continue to use the current session.
 
 All views show active-branch totals and whole-tree totals at the top. For a subagent, the graph covers its saved branch checkpoint (excluding inherited context), so both totals describe that branch rather than abandoned child branches. Subagent sessions lacking inherited-history metadata cannot be graphed safely; the dialog reports this instead.
 

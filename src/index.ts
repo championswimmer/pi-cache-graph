@@ -1,4 +1,5 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { Key, matchesKey } from "@earendil-works/pi-tui";
 import { exportStatsCsv } from "./export.js";
 import { type GraphView, GRAPH_VIEWS, graphViewLabel, renderGraphBody } from "./graph-view.js";
 import { ScrollDialog } from "./scroll-dialog.js";
@@ -76,17 +77,19 @@ export default function cacheGraphExtension(pi: ExtensionAPI): void {
               {
                 title: "Context Cache Graph",
                 getTitle: () => `Context Cache Graph — ${agents[selectedAgent]?.path ?? "/root"} — ${graphViewLabel(currentView)}`,
-                helpText: "1/2/3 view • [/] agent • r refresh • v cycle • ↑/↓ scroll • q/Esc close",
+                helpText: "←/→ agent • 1/2/3 view • r refresh • v cycle • ↑/↓ scroll • q/Esc close",
                 renderBody: (innerWidth) => agentError
-                  ? [theme.fg("warning", agentError), "Press r to retry or [/] to select another agent."]
+                  ? [theme.fg("warning", agentError), "Press r to retry or ←/→ (or [ and ]) to select another agent."]
                   : renderGraphBody(theme, metrics, innerWidth, currentView),
                 onKey: (data) => {
                   if (data === "r") {
                     refresh();
                     return true;
                   }
-                  if (data === "[" || data === "]") {
-                    selectedAgent = (selectedAgent + (data === "]" ? 1 : agents.length - 1)) % agents.length;
+                  const previousAgent = data === "[" || matchesKey(data, Key.left);
+                  const nextAgent = data === "]" || matchesKey(data, Key.right);
+                  if (previousAgent || nextAgent) {
+                    selectedAgent = (selectedAgent + (nextAgent ? 1 : agents.length - 1)) % agents.length;
                     loadSelectedAgent();
                     return true;
                   }

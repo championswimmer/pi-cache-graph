@@ -12,6 +12,33 @@ vi.mock("../src/subagent-data.js", () => ({
 describe("graph agent selector", () => {
   beforeEach(() => vi.clearAllMocks());
 
+  it.each(["completed", "stopped", "failed"])("switches to %s agents with arrow keys and wraps around", async (state) => {
+    const agent = { path: "/root/research", state };
+    vi.mocked(listCacheAgents).mockReturnValueOnce([{ path: "/root" }, agent]);
+    let handler: any;
+    cacheGraphExtension({ registerCommand: (_name: string, command: any) => { handler = command.handler; } } as any);
+    let dialog: any;
+    const sessionManager = {};
+    await handler("graph", {
+      sessionManager,
+      hasUI: true,
+      ui: { custom: async (create: any) => { dialog = create(null, {}, null, () => {}); } },
+    });
+    const options = dialog.options;
+    expect(options.helpText).toContain("←/→ agent");
+    expect(options.helpText).not.toContain("[/]");
+    dialog.handleInput("\x1b[C"); // right arrow
+    expect(options.getTitle()).toContain("/root/research");
+    expect(collectAgentCacheMetrics).toHaveBeenLastCalledWith(sessionManager, agent);
+    dialog.handleInput("\x1b[C");
+    expect(options.getTitle()).toContain("/root —");
+    dialog.handleInput("\x1b[D"); // left arrow wraps to the last agent
+    expect(options.getTitle()).toContain("/root/research");
+    dialog.handleInput("\x1b[D");
+    expect(options.getTitle()).toContain("/root —");
+    expect(options.onKey("/")).toBe(false);
+  });
+
   it("switches agents and refreshes the selected agent and registry", async () => {
     let handler: any;
     const sessionManager = {};

@@ -43,6 +43,24 @@ describe("subagent registry", () => {
     custom("pi-subagent:registry-delta:v1", { version: 1, rootSessionId: "root-id", changes: [{ path: "/root/a", view: { sessionLeafId: "y" }, cleared: ["state"] }] });
     expect(listCacheAgents(root)).toEqual([{ path: "/root" }, { path: "/root/a", sessionFile: "/tmp/a", sessionLeafId: "y" }, { path: "/root/a/nested", state: "paused" }]);
   });
+  it.each(["completed", "stopped", "failed"])("retains session checkpoints when an agent becomes %s", (state) => {
+    const { root, file, custom } = setup();
+    child(file);
+    custom("pi-subagent:registry:v1", {
+      version: 1, rootSessionId: "root-id",
+      threads: [{ view: { path: "/root/a", state: "running", sessionFile: file, sessionLeafId: "own" } }],
+    });
+    custom("pi-subagent:registry-delta:v1", {
+      version: 1, rootSessionId: "root-id",
+      changes: [{ path: "/root/a", view: { state } }],
+    });
+    const agents = listCacheAgents(root);
+    expect(agents).toEqual([{ path: "/root" }, { path: "/root/a", state, sessionFile: file, sessionLeafId: "own" }]);
+    const result = collectAgentCacheMetrics(root, agents[1]!);
+    expect(result.error).toBeUndefined();
+    expect(result.metrics.allMessages.map((message) => message.entryId)).toEqual(["own"]);
+  });
+
   it("fails closed for malformed and foreign registries", () => {
     const { root, custom } = setup();
     custom("pi-subagent:registry:v1", { version: 1, rootSessionId: "other", threads: [] });
